@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+          <link href="tablestyle.css" rel="stylesheet" type="text/css" />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="./jquery.tabletoCSV.js" type="text/javascript" charset="utf-8"></script>
+    <script>
+        $(function(){
+            $("#export").click(function(){
+                $("#export_table").tableToCSV();
+            });
+        });
+    </script>
+    </head>
+    <body>
+           <h1> WASCO CUSTOM REPORT </h1>
+   <?php
+        include 'connect.php';
+         ///echo " something is nice";
+        
+            
+            
+            
+             $dateFrom = trim($_POST['date_from']);
+             $dateto = trim($_POST['to_date']);  
+             $status="Ok";
+            
+               if ($dateFrom=='' &&$dateto==''){
+                     $status = false;
+                     $msg = "  Please select between dates";
+                     header("Location:wasco_report_billing.php");
+                 }
+             if ($status == "Ok"){
+                $succ_count ="SELECT count(*) as num_success from wasco_data_billing WHERE reasons_status REGEXP '^Success' and  (date_processed >= '$dateFrom' and date_processed <='$dateto')  ";
+                $fail_count ="SELECT count(*) as num_failed from wasco_data_billing WHERE reasons_status REGEXP '^Fail' and  (date_processed >= '$dateFrom' and date_processed<='$dateto')  ";
+                $succ_select ="SELECT * from wasco_data_billing WHERE reasons_status REGEXP '^Success' and  (date_processed >= '$dateFrom' and date_processed<='$dateto') ";
+                $failed_select ="SELECT * from wasco_data_billing WHERE reasons_status REGEXP '^Fail' and  (date_processed >= '$dateFrom' and date_processed<='$dateto') ";
+         
+                
+             //   $select = " SELECT user_id, team, msisdn, cash_received, date_loggedin from cup_transaction where team='$keyword'  and  (date_loggedin >= '$dateFrom' and date_loggedin<='$dateto')";
+              
+              $result_succ_count = mysql_query($succ_count);
+              $count_succ = mysql_fetch_assoc($result_succ_count);
+              $number_success = $count_succ['num_success'];
+              $result_fail_count = mysql_query($fail_count);
+              $count_fail = mysql_fetch_assoc($result_fail_count);
+              $number_failed = $count_fail['num_failed'];
+              $result_success = mysql_query($succ_select);
+              $result_fail = mysql_query($failed_select);
+              $num_rows = mysql_num_rows($result_success);
+             // $arr = mysql_fetch_array($result); 
+              $total_sent = $number_success + $number_failed;
+              ?>
+        
+        <button id="export" data-export="export">Export</button>
+        <div class="CSSTableGenerator">
+         <table id="export_table">
+                    <tr>
+                        <td>
+                          Name:
+                        </td>
+                        <td >
+                            Account no:
+                        </td>
+                         <td >
+                            Cell No:
+                        </td>
+                     
+                        <td >
+                            Status
+                        </td>
+                    </tr>
+        <?php
+              while($succ=mysql_fetch_array($result_success))
+	      {
+                  echo '<tr>';
+                     echo '<td>'.$succ['name'].'</td>';
+                  echo '<td>'.$succ['account_no'].'</td>';
+                   echo "<td>".$succ['cell_no']."</td>";
+                  
+                        echo '<td>'.$succ['reasons_status'].'</td>';
+                  echo '</tr> <p>';
+                  
+              }
+         ?>
+                    
+                    <tr><td>Total Successful: </td><td><?php echo $number_success; ?></td> </tr> 
+                    <tr></tr> 
+                      <tr></tr>
+          <?php
+              while($fail=mysql_fetch_array($result_fail))
+	      {
+                  echo '<tr>';
+                     echo '<td>'.$fail['name'].'</td>';
+                  echo '<td>'.$fail['account_no'].'</td>';
+                   echo "<td>".$fail['cell_no']."</td>";
+                  
+                        echo '<td>'.$fail['reasons_status'].'</td>';
+                  echo '</tr> <p>';
+                  
+              }
+         ?>
+                    
+                    <tr><td>Total Failed: </td><td><?php echo $number_failed; ?></td> </tr>   
+                      <tr></tr> 
+                      <tr></tr>
+                    <tr><td>Total sent smses(failed+successful): </td><td><?php echo $total_sent; ?></td> </tr> 
+         </table></div>
+        <?php
+              
+             }
+             
+        
+        ?>
+
+ <button id="export" data-export="export">Export</button>
+ </body>
+</html>
